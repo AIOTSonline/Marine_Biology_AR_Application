@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.EventSystems;
 
 public class ARPlacementController : MonoBehaviour
 {
@@ -20,6 +21,11 @@ public class ARPlacementController : MonoBehaviour
 
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
     private bool placed = false;
+    private static readonly TrackableType FastSurfaceMask =
+        TrackableType.PlaneWithinPolygon |
+        TrackableType.PlaneWithinBounds |
+        TrackableType.PlaneEstimated |
+        TrackableType.FeaturePoint;
 
     void Start()
     {
@@ -50,15 +56,29 @@ public class ARPlacementController : MonoBehaviour
 
     private void TryPlaceAt(Vector2 screenPosition)
     {
-        if (raycastManager.Raycast(screenPosition, hits, TrackableType.Planes))
+        if (IsPointerOverUI())
         {
-            Pose pose = hits[0].pose;
-            PlaceSavedEnvironment(pose.position);
-            placed = true;
+            return;
         }
+
+        if (raycastManager != null && raycastManager.Raycast(screenPosition, hits, FastSurfaceMask))
+        {
+            Pose pose = StabilizePlacementPose(PickBestHit(hits));
+            if (PlaceSavedEnvironment(pose))
+            {
+                placed = true;
+                AppRuntimeUI.ShowStatus("Module placed.", 2f);
+            }
+        }
+        else
+        {
+            AppRuntimeUI.ShowStatus("Move slowly and tap on a brighter scanned surface.", 2.5f);
+        }
+
+        hits.Clear();
     }
 
-    private void PlaceSavedEnvironment(Vector3 position)
+    private bool PlaceSavedEnvironment(Pose pose)
     {
         string envKey = PlayerPrefs.GetString("SelectedEnvironmentKey");
         string json = PlayerPrefs.GetString(envKey);
@@ -66,18 +86,20 @@ public class ARPlacementController : MonoBehaviour
         if (string.IsNullOrEmpty(json))
         {
             Debug.LogError("No environment data found for key: " + envKey);
-            return;
+            AppRuntimeUI.ShowStatus("No saved module found. Create or select a module first.", 3f);
+            return false;
         }
 
         EnvironmentData data = JsonUtility.FromJson<EnvironmentData>(json);
         if (data == null)
         {
             Debug.LogError("Failed to parse environment data.");
-            return;
+            AppRuntimeUI.ShowStatus("Could not load this saved module.", 3f);
+            return false;
         }
 
         GameObject root = new GameObject(data.environmentName);
-        root.transform.position = position;
+        root.transform.SetPositionAndRotation(pose.position, pose.rotation);
 
         if (planeManager != null)
         {
@@ -146,5 +168,53 @@ public class ARPlacementController : MonoBehaviour
             joystickUIRoot.SetActive(mainPlayerFound);
 
         Debug.Log("Environment placed successfully.");
+        return true;
+    }
+
+    private static bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null)
+        {
+            return false;
+        }
+
+        if (Input.touchCount > 0)
+        {
+            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        }
+
+        return EventSystem.current.IsPointerOverGameObject();
+    }
+
+    private static ARRaycastHit PickBestHit(List<ARRaycastHit> hitResults)
+    {
+        foreach (var hit in hitResults)
+        {
+            if (hit.hitType == TrackableType.PlaneWithinPolygon)
+            {
+                return hit;
+            }
+        }
+
+        foreach (var hit in hitResults)
+        {
+            if (hit.hitType == TrackableType.PlaneWithinBounds || hit.hitType == TrackableType.PlaneEstimated)
+            {
+                return hit;
+            }
+        }
+
+        return hitResults[0];
+    }
+
+    private static Pose StabilizePlacementPose(ARRaycastHit hit)
+    {
+        Pose pose = hit.pose;
+        if ((hit.hitType & TrackableType.Planes) == 0)
+        {
+            pose.rotation = Quaternion.identity;
+        }
+
+        return pose;
     }
 }

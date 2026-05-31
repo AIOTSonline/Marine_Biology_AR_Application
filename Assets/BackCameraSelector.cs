@@ -7,27 +7,30 @@ public class BackCameraSelector : MonoBehaviour
 {
     IEnumerator Start()
     {
-        // --- CAMERA PERMISSION (Android/iOS) ---
-#if UNITY_ANDROID
-        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera))
+        AppRuntimeUI.ShowStatus("Preparing human interaction camera...", 0f);
+        yield return PermissionManager.RequestCameraPermission();
+
+        if (!PermissionManager.HasCameraPermission())
         {
-            UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.Camera);
-            while (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera))
-                yield return null; // wait for user
+            AppRuntimeUI.ShowStatus("Camera permission is required for Human Interaction.", 3f);
+            Debug.LogWarning("Camera permission was denied. MediaPipe camera source cannot start.");
+            yield break;
         }
-#elif UNITY_IOS
-        if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
-        {
-            yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
-        }
-#endif
 
         // Wait until Bootstrap created the ImageSource
+        AppRuntimeUI.ShowStatus("Loading human interaction model...", 0f);
         yield return new WaitUntil(() => ImageSourceProvider.ImageSource != null);
         var src = ImageSourceProvider.ImageSource;
 
         // Pick the first non-front-facing device (fallback index 0)
         var devices = WebCamTexture.devices;
+        if (devices.Length == 0)
+        {
+            AppRuntimeUI.ShowStatus("No camera was found on this device.", 3f);
+            Debug.LogWarning("No camera devices were found.");
+            yield break;
+        }
+
         int backIdx = -1;
         for (int i = 0; i < devices.Length; i++)
             if (!devices[i].isFrontFacing) { backIdx = i; break; }
@@ -42,5 +45,6 @@ public class BackCameraSelector : MonoBehaviour
         // Select the back camera and play
         src.SelectSource(backIdx);
         yield return src.Play();  // Play() does return IEnumerator
+        AppRuntimeUI.ShowStatus("Stand in view of the camera for detection.", 4f);
     }
 }

@@ -16,8 +16,8 @@ public class HumanDetectionUI : MonoBehaviour
     {
         if (statusText != null)
         {
-            statusText.text = "Not Detected";
-            statusText.color = Color.red;
+            statusText.text = "Looking for a person";
+            statusText.color = new Color(1f, 0.72f, 0.24f);
         }
     }
 
@@ -41,8 +41,8 @@ public class HumanDetectionUI : MonoBehaviour
         {
             wasDetected = isDetected;
 
-            statusText.text = isDetected ? "Detected" : "Not Detected";
-            statusText.color = isDetected ? Color.green : Color.red;
+            statusText.text = isDetected ? "Person detected" : "Looking for a person";
+            statusText.color = isDetected ? new Color(0.25f, 1f, 0.45f) : new Color(1f, 0.72f, 0.24f);
         }
     }
 }

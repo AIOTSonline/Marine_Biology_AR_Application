@@ -30,7 +30,7 @@ public class BackNavigation : MonoBehaviour
                     }
                     canvas.gameObject.SetActive(false);
 
-                    if (canvas.name == "AICanvas")
+                    if (canvas.name == "AICanvas" && canvasToggleManager != null)
                         canvasToggleManager.HideAICanvas();
                     return;
                 }

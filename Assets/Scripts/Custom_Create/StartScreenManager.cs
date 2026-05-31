@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
+using System.Collections;
 
 public class StartScreenManager : MonoBehaviour
 {
@@ -15,16 +16,22 @@ public class StartScreenManager : MonoBehaviour
         Debug.Log("Saved Modules Folder: " + Application.persistentDataPath);
 
         // Create new module
-        createModuleButton.onClick.AddListener(() =>
+        if (createModuleButton != null)
         {
-            SceneManager.LoadScene("CreateProjectScene");
-        });
+            createModuleButton.onClick.AddListener(() =>
+            {
+                SceneManager.LoadScene("CreateProjectScene");
+            });
+        }
 
         // Scan QR to Import
-        scanQRButton.onClick.AddListener(() =>
+        if (scanQRButton != null)
         {
-            SceneManager.LoadScene("QRScannerScene"); // Make sure this scene is added to Build Settings
-        });
+            scanQRButton.onClick.AddListener(() =>
+            {
+                StartCoroutine(OpenQRScannerScene());
+            });
+        }
 
         // Load saved modules
         string[] modulePaths = ModuleSaveManager.GetAllModulePaths();
@@ -49,5 +56,21 @@ public class StartScreenManager : MonoBehaviour
                 SceneManager.LoadScene("PlacedActorListScene");
             });
         }
+    }
+
+    private IEnumerator OpenQRScannerScene()
+    {
+        AppRuntimeUI.ShowStatus("Checking camera permission...", 0f);
+        yield return PermissionManager.RequestCameraPermission();
+
+        if (!PermissionManager.HasCameraPermission())
+        {
+            AppRuntimeUI.ShowStatus("Camera permission is required to scan QR codes.", 3f);
+            Debug.LogWarning("Camera permission was denied. Cannot open QR scanner.");
+            yield break;
+        }
+
+        AppRuntimeUI.ShowStatus("Opening QR scanner...", 2f);
+        SceneManager.LoadScene("QRScannerScene");
     }
 }

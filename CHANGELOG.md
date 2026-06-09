@@ -69,5 +69,12 @@
 - Updated AAB command-line builds to enable Unity Play Asset Delivery splitting while keeping APK builds single-file/no-OBB.
 - Built the next release with Android version name `0.2.6` and version code `13`.
 
+### 2026-06-09 follow-up
+- Fixed AR_Spawn model selection when legacy menu buttons request indexes outside the available prefab list.
+- Mapped older AR_Spawn button indexes back onto the available Octopus, Nautilus, and Squid prefabs.
+- Added placement feedback when AR_Spawn has no valid selected model.
+- Re-enabled renderers on newly spawned AR_Spawn objects so selected models cannot spawn hidden.
+- Built the next release with Android version name `0.2.7` and version code `14`.
+
 ### Known release note
 - The generated APK is installable for device testing. A Play Store upload normally requires a signed release AAB or APK using the project keystore and valid store metadata.

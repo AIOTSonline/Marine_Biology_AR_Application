@@ -92,13 +92,22 @@ public sealed class ARSpawnTapFallback : MonoBehaviour
         if (!raycastManager.Raycast(screenPosition, hits, PlacementMask))
         {
             AppRuntimeUI.ShowStatus("Move slowly and tap on a brighter scanned surface.", 2.5f);
+            hits.Clear();
             return;
         }
 
         var hit = PickBestHit(hits);
         var normal = GetSurfaceNormal(hit);
+        if (!HasSpawnableObject())
+        {
+            AppRuntimeUI.ShowStatus("Select an available model first.", 2f);
+            hits.Clear();
+            return;
+        }
+
         if (objectSpawner.TrySpawnObject(hit.pose.position, normal))
         {
+            NormalizeLatestSpawnedObject();
             AppRuntimeUI.ShowStatus("Placed.", 1.5f);
         }
         else
@@ -107,6 +116,32 @@ public sealed class ARSpawnTapFallback : MonoBehaviour
         }
 
         hits.Clear();
+    }
+
+    private bool HasSpawnableObject()
+    {
+        if (objectSpawner == null || objectSpawner.objectPrefabs == null || objectSpawner.objectPrefabs.Count == 0)
+        {
+            return false;
+        }
+
+        var index = objectSpawner.spawnOptionIndex;
+        return index < 0 || index >= objectSpawner.objectPrefabs.Count || objectSpawner.objectPrefabs[index] != null;
+    }
+
+    private void NormalizeLatestSpawnedObject()
+    {
+        if (objectSpawner == null || objectSpawner.transform.childCount == 0)
+        {
+            return;
+        }
+
+        var spawned = objectSpawner.transform.GetChild(objectSpawner.transform.childCount - 1).gameObject;
+        foreach (var renderer in spawned.GetComponentsInChildren<Renderer>(true))
+        {
+            renderer.gameObject.SetActive(true);
+            renderer.enabled = true;
+        }
     }
 
     private static void DisableSampleSpawnTriggers()

@@ -312,20 +312,41 @@ public class ARTemplateMenuManager : MonoBehaviour
         if (m_ObjectSpawner == null)
         {
             Debug.LogWarning("Object Spawner not configured correctly: no ObjectSpawner set.");
+            AppRuntimeUI.ShowStatus("Object spawner is not ready.", 2f);
         }
         else
         {
-            if (m_ObjectSpawner.objectPrefabs.Count > objectIndex)
+            var prefabCount = m_ObjectSpawner.objectPrefabs.Count;
+            var resolvedIndex = ResolveObjectIndex(objectIndex, prefabCount);
+
+            if (resolvedIndex >= 0)
             {
-                m_ObjectSpawner.spawnOptionIndex = objectIndex;
+                m_ObjectSpawner.spawnOptionIndex = resolvedIndex;
+                AppRuntimeUI.ShowStatus("Tap a scanned surface to place.", 2f);
             }
             else
             {
-                Debug.LogWarning("Object Spawner not configured correctly: object index larger than number of Object Prefabs.");
+                Debug.LogWarning($"Object Spawner not configured correctly: object index {objectIndex} larger than number of Object Prefabs.");
+                AppRuntimeUI.ShowStatus("This model is not available in the build.", 2f);
             }
         }
 
         HideMenu();
+    }
+
+    static int ResolveObjectIndex(int requestedIndex, int prefabCount)
+    {
+        if (prefabCount <= 0)
+            return -1;
+
+        if (requestedIndex >= 0 && requestedIndex < prefabCount)
+            return requestedIndex;
+
+        var legacyIndex = requestedIndex - prefabCount;
+        if (legacyIndex >= 0 && legacyIndex < prefabCount)
+            return legacyIndex;
+
+        return -1;
     }
 
     void ShowMenu()

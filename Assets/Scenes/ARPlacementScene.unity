@@ -1111,7 +1111,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   arSession: {fileID: 0}
-  previousSceneName: StartScene
+  previousSceneName: StartScreenScene
   infoCanvas: {fileID: 0}
   quizCanvas: {fileID: 0}
 --- !u!4 &746432941
@@ -1166,7 +1166,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 21.000006, y: -14.999878}
-  m_SizeDelta: {x: 80, y: 80}
+  m_SizeDelta: {x: 70, y: 70}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &786104408
 MonoBehaviour:

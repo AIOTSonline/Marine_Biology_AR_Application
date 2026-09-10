@@ -271,4 +271,89 @@ public class AuthManager : MonoBehaviour
                 });
         });
     }
+
+#if UNITY_IOS || UNITY_EDITOR
+    private AppleAuth.IAppleAuthManager appleAuthManager;
+
+    private void InitializeAppleAuth()
+    {
+        if (AppleAuth.AppleAuthManager.IsCurrentPlatformSupported)
+        {
+            var deserializer = new AppleAuth.IOS.PayloadDeserializer();
+            appleAuthManager = new AppleAuth.AppleAuthManager(deserializer);
+        }
+    }
+
+    private void Update()
+    {
+        if (appleAuthManager != null)
+        {
+            appleAuthManager.Update();
+        }
+    }
+
+    public void AppleSignInUser()
+    {
+        if (auth == null)
+        {
+            statusText.text = "Auth not initialized yet.";
+            return;
+        }
+
+        if (appleAuthManager == null)
+        {
+            InitializeAppleAuth();
+        }
+
+        if (appleAuthManager == null)
+        {
+            statusText.text = "Apple Sign-In is not supported on this platform.";
+            return;
+        }
+
+        var loginArgs = new AppleAuth.AppleAuthLoginArgs(AppleAuth.Enums.LoginOptions.IncludeEmail | AppleAuth.Enums.LoginOptions.IncludeFullName);
+
+        appleAuthManager.LoginWithAppleId(
+            loginArgs,
+            credential =>
+            {
+                var appleIdCredential = credential as AppleAuth.Interfaces.IAppleIDCredential;
+                if (appleIdCredential != null && appleIdCredential.IdentityToken != null)
+                {
+                    string idToken = System.Text.Encoding.UTF8.GetString(appleIdCredential.IdentityToken, 0, appleIdCredential.IdentityToken.Length);
+                    
+                    Credential firebaseCredential = OAuthProvider.GetCredential("apple.com", idToken, null, null);
+
+                    auth.SignInWithCredentialAsync(firebaseCredential).ContinueWithOnMainThread(task =>
+                    {
+                        if (task.IsCompletedSuccessfully)
+                        {
+                            statusText.text = "Apple Sign-In successful.";
+                            SceneManager.LoadScene("StartScene");
+                        }
+                        else
+                        {
+                            statusText.text = "Firebase Apple auth failed.";
+                            Debug.LogError(task.Exception);
+                        }
+                    });
+                }
+                else
+                {
+                    statusText.text = "Apple Sign-In token missing.";
+                }
+            },
+            error =>
+            {
+                statusText.text = "Apple Sign-In failed or cancelled.";
+                Debug.LogError($"Apple Sign-In Error: {error.GetAuthorizationErrorCode()} - {error.LocalizedDescription}");
+            }
+        );
+    }
+#else
+    public void AppleSignInUser()
+    {
+        statusText.text = "Apple Sign-In is only available on iOS/Mac.";
+    }
+#endif
 }

@@ -271,7 +271,7 @@ public class PackageManager : MonoBehaviour
             return null;
         }
 
-        return new PackageMetadata
+        var metadata = new PackageMetadata
         {
             PackageId = snapshot.GetValue<string>("packageId"),
             PackageName = snapshot.GetValue<string>("packageName"),
@@ -281,6 +281,17 @@ public class PackageManager : MonoBehaviour
             CatalogHashUrl = snapshot.GetValue<string>("catalogHashUrl"),
             SettingsUrl = snapshot.GetValue<string>("settingsUrl")
         };
+
+#if UNITY_IOS
+        if (!string.IsNullOrEmpty(metadata.CatalogUrl))
+            metadata.CatalogUrl = metadata.CatalogUrl.Replace("/Android/", "/iOS/");
+        if (!string.IsNullOrEmpty(metadata.CatalogHashUrl))
+            metadata.CatalogHashUrl = metadata.CatalogHashUrl.Replace("/Android/", "/iOS/");
+        if (!string.IsNullOrEmpty(metadata.SettingsUrl))
+            metadata.SettingsUrl = metadata.SettingsUrl.Replace("/Android/", "/iOS/");
+#endif
+
+        return metadata;
     }
 
     public async Task<bool> LoadCatalogAsync(PackageMetadata package)

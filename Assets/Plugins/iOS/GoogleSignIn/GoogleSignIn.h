@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #import <GoogleSignIn/GIDSignIn.h>
-@interface GoogleSignInHandler
-    : NSObject <GIDSignInDelegate, GIDSignInUIDelegate>
+@interface GoogleSignInHandler : NSObject <GIDSignInDelegate>
 
 @end

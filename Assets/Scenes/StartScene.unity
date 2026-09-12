@@ -3655,6 +3655,7 @@ MonoBehaviour:
     using AR."
   checkingAnimDuration: 0.8
   forceResetOnPlay: 1
+  forceShowSafetyModalOnPlay: 0
 --- !u!1 &478247965
 GameObject:
   m_ObjectHideFlags: 0

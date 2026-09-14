@@ -279,7 +279,7 @@ public class AuthManager : MonoBehaviour
     {
         if (AppleAuth.AppleAuthManager.IsCurrentPlatformSupported)
         {
-            var deserializer = new AppleAuth.IOS.PayloadDeserializer();
+            var deserializer = new AppleAuth.Native.PayloadDeserializer();
             appleAuthManager = new AppleAuth.AppleAuthManager(deserializer);
         }
     }
@@ -346,7 +346,8 @@ public class AuthManager : MonoBehaviour
             error =>
             {
                 statusText.text = "Apple Sign-In failed or cancelled.";
-                Debug.LogError($"Apple Sign-In Error: {error.GetAuthorizationErrorCode()} - {error.LocalizedDescription}");
+                var authorizationErrorCode = (AppleAuth.Enums.AuthorizationErrorCode)error.Code;
+                Debug.LogError($"Apple Sign-In Error: {authorizationErrorCode} - {error.LocalizedDescription}");
             }
         );
     }

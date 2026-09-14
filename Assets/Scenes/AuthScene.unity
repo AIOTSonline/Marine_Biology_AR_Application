@@ -4715,6 +4715,7 @@ MonoBehaviour:
   loadingPanel: {fileID: 785625466}
   loadingBar: {fileID: 1104368546}
   loadingText: {fileID: 559445226}
+  maxWaitSeconds: 8
 --- !u!1 &938085207
 GameObject:
   m_ObjectHideFlags: 0
